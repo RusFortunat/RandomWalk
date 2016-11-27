@@ -8,7 +8,7 @@ void shiftright(int myarray[], int myarray2[], int element, int size, int bounda
 void shiftleft(int myarray[], int myarray2[], int element, int size, int boundary);
 
 int main() {
-	string outFile("C:\\Users\\Ruslan\\Desktop\\RandomWalk_1d_plot.txt"); // File for storing the output.
+	string outFile("C:\\Users\\Ruslan\\Desktop\\research\\Random_Walk\\RandomWalk_1d.txt"); // File for storing the output.
 	ofstream out_stream;
 	out_stream.open(outFile.c_str());
 
