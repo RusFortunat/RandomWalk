@@ -1,0 +1,10 @@
+﻿  Source.cpp
+d:\vs projects\random walk\source.cpp(27): warning C4101: 'a': unreferenced local variable
+d:\vs projects\random walk\source.cpp(26): warning C4101: 'R': unreferenced local variable
+d:\vs projects\random walk\source.cpp(28): warning C4101: 'max': unreferenced local variable
+d:\vs projects\random walk\source.cpp(27): warning C4101: 'e': unreferenced local variable
+d:\vs projects\random walk\source.cpp(27): warning C4101: 'b': unreferenced local variable
+d:\vs projects\random walk\source.cpp(27): warning C4101: 'd': unreferenced local variable
+d:\vs projects\random walk\source.cpp(26): warning C4101: 'Lat': unreferenced local variable
+  Random walk.vcxproj -> D:\VS projects\Random walk\Debug\Random walk.exe
+  Random walk.vcxproj -> D:\VS projects\Random walk\Debug\Random walk.pdb (Full PDB)
