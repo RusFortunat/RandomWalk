@@ -8,7 +8,7 @@ void shiftright(int myarray[], int myarray2[], int element, int size, int bounda
 void shiftleft(int myarray[], int myarray2[], int element, int size, int boundary);
 
 int main() {
-	string outFile("C:\\Users\\Ruslan\\Desktop\\research\\Random_Walk\\RandomWalk_1d.txt"); // File for storing the output.
+	string outFile("D:\\Science\\Research\\Random_Walk\\RandWalk_1d.txt"); // File for storing the output.
 	ofstream out_stream;
 	out_stream.open(outFile.c_str());
 
@@ -25,7 +25,7 @@ int main() {
 		//// Declaration of the variables ////
 		int L, Lat, R, dt, N, nwalks, iwalk, istep, iter, bc;
 		int a, b, c, d, e, n, Rest;
-		double plain, xsum, x, xsqsum, r, max, p;
+		double plain, xsum, xsqsum, r, max, p;
 		//// Specifying the parameters of the simulation ////
 		cout << "First, enter parameters for your 1d lattice:" << endl;
 		cout << "Size of the lattice: "; // The size of one dimensional array
@@ -50,6 +50,7 @@ int main() {
 		srand((unsigned)time(NULL));
 		int* Lattice = new int[L]; // Our one dimensional lattice
 		int* Counter = new int[L]; // Here we will store info how many times each cell were occupied during the single run
+		int* XMEAN = new int[L]; // To plot a graph for mean displacement vs probability distribution
 		double* dblCounter = new double[L]; // Will store here info about all runs
 		double* Prob = new double[L]; // Array with probabilities
 		xsum = 0; xsqsum = 0;
@@ -57,6 +58,11 @@ int main() {
 		{
 			dblCounter[n] = 0; // 
 		}
+		for (n = 0; n < L; n++) {
+			XMEAN[n] = n - L / 2;
+			cout << XMEAN[n] << endl;
+		}
+
 
 		//// Beginning of the simulation ////
 		for (iwalk = 0; iwalk < nwalks; iwalk++) { // Number of runs
@@ -106,7 +112,7 @@ int main() {
 
 			// Beginning of the single run
 			// Choose wever you are working with particle exclusion system or not
-			if (bc == 0 || bc == 1) { // For particle exclusion
+			if (bc == 0 || bc == 1) { // For particle exclusion / hardcore interaction
 				for (istep = 0; istep < dt; istep++) { // Number of steps for each run
 					for (iter = 0; iter < L; iter++) { // Number of iterations for each time step
 
@@ -207,9 +213,8 @@ int main() {
 			// Displacement -- !!! Works only for a single particle in a whole lattice!!! N must equal to 1
 			for (n = 0; n < L; n++) {
 				if (Lattice[n] != 0) {
-					x = n - L/2;
-					xsum += x;
-					xsqsum += x*x;
+					xsum += XMEAN[n];
+					xsqsum += XMEAN[n]* XMEAN[n]; // Accumulates squared displacement
 				}
 			}
 
@@ -269,19 +274,19 @@ int main() {
 			}
 		}
 		cout << "\nCompare with the flat distribution 1/L: " << plain << endl << endl;
-		cout << "\nAverage displacement" << xsum << endl;
-		cout << endl << "\nMean squared displacement: " << xsqsum << endl;
+		cout << "\nAverage displacement: " << xsum/nwalks << endl;
+		cout << endl << "\nMean squared displacement: " << xsqsum/nwalks << endl;
+		cout << "\nCompare with the number of timesteps: " << dt << endl;
 
 		//// Exporting the output to the text file ////
 		// Header
 		out_stream << "This is a document that stores the output from Random Walk program. Here in particular we work with 1d lattice gas.\n\nThe simulation input parameters:\n";
 		// Simulation parameters
-		out_stream << "Lattice size: " << L << " cells\n" << "Number of atoms: " << N << "\n" << "Probability to go left: " << p << "\n" << "Boundary conditions (0 stands for periodic, and 1 for reflecting b.c.): " << bc << "\n" << "Number of walks: " << nwalks << "\n" << "Number of steps in each walk: " << dt << ".\n\n Cell number | Probability to find an atom\n";
+		out_stream << "Lattice size: " << L << " cells"<<"\nNumber of atoms: " << N << "\nProbability to go left: " << p << "\nBoundary conditions (0 stands for periodic, and 1 for reflecting b.c.): " << bc << "\nNumber of walks: " << nwalks << "\nNumber of steps in each walk: " << dt <<"\nMean displacement: "<<xsum/nwalks<<"\nMean square displacement"<<xsqsum/nwalks << ".\n\n Cell number | Probability to find an atom\n";
 		// Output
 		for (n = 0; n < L; n++) {
-			out_stream << Prob[n] << endl;
+			out_stream << Prob[n] << "		"<< XMEAN[n] << endl;
 		}
-		out_stream << "\n\nCompare with the flat distribution 1/L: " << plain << endl << endl;
 		//cout << "Doing random walk to " << N << " steps" << " and " << nwalks << " times, we have" << endl;
 		//cout << "The average displacement " << xsum / nwalks << "\nThe mean squared displacement " << xsqsum / nwalks << endl;
 		out_stream.close();
