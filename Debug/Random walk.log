@@ -1,10 +1,10 @@
 ﻿  Source.cpp
-d:\vs_projects\random_walk\source.cpp(27): warning C4101: 'a': unreferenced local variable
-d:\vs_projects\random_walk\source.cpp(26): warning C4101: 'R': unreferenced local variable
-d:\vs_projects\random_walk\source.cpp(28): warning C4101: 'max': unreferenced local variable
-d:\vs_projects\random_walk\source.cpp(27): warning C4101: 'e': unreferenced local variable
-d:\vs_projects\random_walk\source.cpp(27): warning C4101: 'b': unreferenced local variable
-d:\vs_projects\random_walk\source.cpp(27): warning C4101: 'd': unreferenced local variable
-d:\vs_projects\random_walk\source.cpp(26): warning C4101: 'Lat': unreferenced local variable
+d:\vs_projects\random_walk\source.cpp(28): warning C4101: 'R': unreferenced local variable
+d:\vs_projects\random_walk\source.cpp(30): warning C4101: 'max': unreferenced local variable
+d:\vs_projects\random_walk\source.cpp(29): warning C4101: 'e': unreferenced local variable
+d:\vs_projects\random_walk\source.cpp(29): warning C4101: 'b': unreferenced local variable
+d:\vs_projects\random_walk\source.cpp(29): warning C4101: 'd': unreferenced local variable
+d:\vs_projects\random_walk\source.cpp(28): warning C4101: 'Lat': unreferenced local variable
+  LINK : D:\VS_Projects\Random_walk\Debug\Random walk.exe not found or not built by the last incremental link; performing full link
   Random walk.vcxproj -> D:\VS_Projects\Random_walk\Debug\Random walk.exe
   Random walk.vcxproj -> D:\VS_Projects\Random_walk\Debug\Random walk.pdb (Full PDB)

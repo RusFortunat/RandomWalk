@@ -2,6 +2,8 @@
 #include <fstream>
 #include <stdio.h>
 #include <time.h>
+#include <random>
+
 using namespace std;
 
 void shiftright(int myarray[], int myarray2[], int element, int size, int boundary);
@@ -25,7 +27,7 @@ int main() {
 		//// Declaration of the variables ////
 		int L, Lat, R, dt, N, nwalks, iwalk, istep, iter, bc;
 		int a, b, c, d, e, n, Rest;
-		double plain, xsum, xsqsum, r, max, p;
+		double plain, x, xsum, xsqsum, r, max, p;
 		//// Specifying the parameters of the simulation ////
 		cout << "First, enter parameters for your 1d lattice:" << endl;
 		cout << "Size of the lattice: "; // The size of one dimensional array
@@ -34,7 +36,7 @@ int main() {
 		cin >> N;
 		cout << "\nSet the probability for atom to go left: ";
 		cin >> p; // Sets the probability to go to the left (and to the rigth: 1 - p )
-		cout << "\nChoose boundary conditions type (type '0' for periodic, '1' for reflecting bc, '2' for reflecting bc with particles accumulation): ";
+		cout << "\nChoose boundary conditions type (type '0' for periodic, '1' for reflecting b.c.): ";
 		cin >> bc; // I will fix this and make user be able to type 'periodic' or 'reflecting'
 		cout << "\nHow many steps for each walk: ";
 		cin >> dt;
@@ -47,10 +49,15 @@ int main() {
 		}
 
 		//// Random walk algorithm ////
-		srand((unsigned)time(NULL));
+		// Mersenne Twister RNG //
+		random_device rd{};
+		mt19937 RNG{ rd() };
+		uniform_int_distribution<int> dist(0, L - 1);
+		uniform_real_distribution<double> Rand{ 0.0, 1.0 };
+		// rand() RNG //  -- Bad one
+		// srand((unsigned)time(NULL));
 		int* Lattice = new int[L]; // Our one dimensional lattice
 		int* Counter = new int[L]; // Here we will store info how many times each cell were occupied during the single run
-		int* XMEAN = new int[L]; // To plot a graph for mean displacement vs probability distribution
 		double* dblCounter = new double[L]; // Will store here info about all runs
 		double* Prob = new double[L]; // Array with probabilities
 		xsum = 0; xsqsum = 0;
@@ -58,15 +65,10 @@ int main() {
 		{
 			dblCounter[n] = 0; // 
 		}
-		for (n = 0; n < L; n++) {
-			XMEAN[n] = n - L / 2;
-			cout << XMEAN[n] << endl;
-		}
-
 
 		//// Beginning of the simulation ////
 		for (iwalk = 0; iwalk < nwalks; iwalk++) { // Number of runs
-			// Setting all lattice cells to be empty first
+												   // Setting all lattice cells to be empty first
 			for (n = 0; n < L; n++)
 			{
 				Lattice[n] = 0;
@@ -76,130 +78,131 @@ int main() {
 				Counter[n] = 0; // 
 			}
 			// Filling the lattice with particles in random fashion
-			// First particle will be placed at the center of the array to compute the probability distribution
+			// First particle will be placed at the center of the array to compute the probability distribution vs displacement
 			Lattice[L / 2] = 1;
-			Counter[L / 2] = 1;
+			// Counter[L / 2] = 1;
 			for (n = 1; n < N; n++) {
 				//c = rand() % L; // Chooses a random cell in our 1d array.
-				// j = min + (int) ((max-min+1) * (rand() / (RAND_MAX + 1.0))); // Just for reference
-				c = (int)((L - 1 - 0 + 1)* (rand() / (RAND_MAX + 1.0)));
-
+				//c = (int)((L)* (rand() / (RAND_MAX + 1.0)));
+				a = dist(RNG);
 				// Check if random number generator working properly
-				/*for (n = 0; n < 100000; n++) {
-					c = (int)((L - 1 - 0 + 1)* (rand() / (RAND_MAX + 1.0)));
-					Counter[c]++;
+				/*for (n = 0; n < 10000; n++) {
+				a = dist(RNG);
+				Counter[a]++;
 				}
 				cout << "\n\nSee if randomizator works properly:" << endl;
 				for (n = 0; n < L; n++) {
-					cout << Counter[n] << "  " << endl;
+				cout << Counter[n] << "  " << endl;
 				}*/
-				//Result -- Don't like the way rand() distribute particles. Will try to find a substitution for it soon.
+				//Result for rand() -- Don't like the way rand() distribute particles. Will try to find a substitution for it soon.
 
-				if (Lattice[c] != 1) {  // Check if cell is already occupied
-					Lattice[c] = 1;
-					Counter[c] ++;
+				if (Lattice[a] != 1) {  // Check if cell is already occupied
+					Lattice[a] = 1;
+					Counter[a] ++;
 				}
 				else { // Go back if it is occupied
 					n--;
 				}
 			}
+
 			// Displaying the initial positions
 			cout << "\nInitial positions of the attoms in the lattice:\n";
 			for (n = 0; n < L; n++) {
 				cout << Lattice[n];
-			}
-			cout << endl;
+			}cout << endl;
 
 			// Beginning of the single run
-			// Choose wever you are working with particle exclusion system or not
-			if (bc == 0 || bc == 1) { // For particle exclusion / hardcore interaction
-				for (istep = 0; istep < dt; istep++) { // Number of steps for each run
-					for (iter = 0; iter < L; iter++) { // Number of iterations for each time step
-
-						// Picking the random particle in the array
-						c = (int)((L - 1 - 0 + 1)* (rand() / (RAND_MAX + 1.0)));
-						if (Lattice[c] != 0) { // Working only with non-empty cells
-							// Throwing the due. Generates a random number between 0 and 1. If number is less than probability p, go to the left, otherwise go to the right
-							r = ((double)rand() / (RAND_MAX));
-							if (r < p) {
-								if (Lattice[c - 1] != 1 && c != 0) {
-									shiftleft(Lattice, Counter, c, L, bc);
-								}
-								else { // If the left neighbor cell is occupied, go to the right
-									if (Lattice[c - 1] != 0 && c != 0) {
-										shiftright(Lattice, Counter, c, L, bc);
-									}
-									else { // If we have the first cell, treat separately
-										if (Lattice[L - 1] != 1) {
-											shiftleft(Lattice, Counter, 0, L, bc);
-										}
-									}
-								}
+			for (istep = 0; istep < dt; istep++) { // Number of steps for each run
+				for (iter = 0; iter < N; iter++) { // Number of iterations for each time step
+												   // Picking the random particle in the array
+												   // c = (int)((L - 1 - 0 + 1)* (rand() / (RAND_MAX + 1.0)));  -- Bad way, but working
+					c = dist(RNG);
+					if (Lattice[c] != 0) { // Working only with non-empty cells
+										   // Throwing the due. Generates a random number between 0 and 1. If number is less than probability p, go to the left, otherwise go to the right
+										   //r = ((double)rand() / (RAND_MAX));
+						r = Rand(RNG);
+						if (r < p) {
+							if (Lattice[c - 1] != 1 && c != 0) {
+								shiftleft(Lattice, Counter, c, L, bc);
 							}
-							else { // For r > p, we shift our particle to the right neighbor cell
-								if (Lattice[c + 1] != 1 && n != L - 1) {
+							else { // If the left neighbor cell is occupied, go to the right
+								if (Lattice[c - 1] != 0 && c != 0) {
 									shiftright(Lattice, Counter, c, L, bc);
 								}
-								else { // If the right neighbor cell is occupied, go to the left
-									if (Lattice[c + 1] != 0 && c != L - 1) {
-										shiftleft(Lattice, Counter, c, L, bc);
-									}
-									else { // If we have the last cell, treat separately
-										shiftright(Lattice, Counter, L - 1, L, bc);
+								else { // If we have the first cell, treat separately
+									if (Lattice[L - 1] != 1) {
+										shiftleft(Lattice, Counter, 0, L, bc);
 									}
 								}
-							}
-						}
-					}
-					// End of the step cycle
-
-					// Displaying change of the positions
-
-					for (n = 0; n < L; n++) {
-						cout << Lattice[n];
-					}
-					cout << endl;
-				}
-			}
-			/*else { // For systems without exclusion
-				for (istep = 0; istep < dt; istep++) { // Number of steps for each run
-					// Filling the empty lattice sites with particles in random fashion
-					for (n = 0; n < N; n++) {
-						//c = rand() % L; // Chooses a random cell in our 1d array.
-						// j = min + (int) ((max-min+1) * (rand() / (RAND_MAX + 1.0))); // Just for reference
-						c = (int)((L)* (rand() / (RAND_MAX + 1.0)));
-						// Check if random number generator working properly
-						if (Lattice[c] == 0) {  // Check if cell is already occupied
-							Lattice[c] = 1;
-							Counter[c] ++;
-						}
-						else { // Go back if it is occupied
-							n--;
-						}
-					}
-
-					for (iter = 0; iter < L; iter++) { // Number of iterations for each time step
-						// Picking the random particle in the array
-						c = (int)((L)* (rand() / (RAND_MAX + 1.0)));
-						if (Lattice[c] != 0) { // Working only with non-empty cells
-						// Throwing the due. Generates a random number between 0 and 1. If number is less than probability p, go to the left, otherwise go to the right
-							r = ((double)rand() / (RAND_MAX));
-							if (r < p) {
-								shiftleft(Lattice, Counter, c, L, bc);
 							}
 						}
 						else { // For r > p, we shift our particle to the right neighbor cell
-							shiftright(Lattice, Counter, c, L, bc);
+							if (Lattice[c + 1] != 1 && n != L - 1) {
+								shiftright(Lattice, Counter, c, L, bc);
+							}
+							else { // If the right neighbor cell is occupied, go to the left
+								if (Lattice[c + 1] != 0 && c != L - 1) {
+									shiftleft(Lattice, Counter, c, L, bc);
+								}
+								else { // If we have the last cell, treat separately
+									shiftright(Lattice, Counter, L - 1, L, bc);
+								}
+							}
 						}
+					}
+					else {
+						iter--;
 					}
 				}
 				// End of the step cycle
 
 				// Displaying change of the positions
+
 				for (n = 0; n < L; n++) {
-				cout << Lattice[n];
+					cout << Lattice[n];
 				}
 				cout << endl;
+			}
+
+			/*else { // For systems without exclusion
+			for (istep = 0; istep < dt; istep++) { // Number of steps for each run
+			// Filling the empty lattice sites with particles in random fashion
+			for (n = 0; n < N; n++) {
+			//c = rand() % L; // Chooses a random cell in our 1d array.
+			// j = min + (int) ((max-min+1) * (rand() / (RAND_MAX + 1.0))); // Just for reference
+			c = (int)((L)* (rand() / (RAND_MAX + 1.0)));
+			// Check if random number generator working properly
+			if (Lattice[c] == 0) {  // Check if cell is already occupied
+			Lattice[c] = 1;
+			Counter[c] ++;
+			}
+			else { // Go back if it is occupied
+			n--;
+			}
+			}
+
+			for (iter = 0; iter < L; iter++) { // Number of iterations for each time step
+			// Picking the random particle in the array
+			c = (int)((L)* (rand() / (RAND_MAX + 1.0)));
+			if (Lattice[c] != 0) { // Working only with non-empty cells
+			// Throwing the due. Generates a random number between 0 and 1. If number is less than probability p, go to the left, otherwise go to the right
+			r = ((double)rand() / (RAND_MAX));
+			if (r < p) {
+			shiftleft(Lattice, Counter, c, L, bc);
+			}
+			}
+			else { // For r > p, we shift our particle to the right neighbor cell
+			shiftright(Lattice, Counter, c, L, bc);
+			}
+			}
+			}
+			// End of the step cycle
+
+			// Displaying change of the positions
+			for (n = 0; n < L; n++) {
+			cout << Lattice[n];
+			}
+			cout << endl;
 			}*/
 
 			// End of the run
@@ -213,8 +216,9 @@ int main() {
 			// Displacement -- !!! Works only for a single particle in a whole lattice!!! N must equal to 1
 			for (n = 0; n < L; n++) {
 				if (Lattice[n] != 0) {
-					xsum += XMEAN[n];
-					xsqsum += XMEAN[n]* XMEAN[n]; // Accumulates squared displacement
+					x = n - L / 2;
+					xsum += x;
+					xsqsum += x*x; // Accumulates squared displacement
 				}
 			}
 
@@ -226,11 +230,10 @@ int main() {
 			if (N != Rest) {
 				cout << "Partice lost during the run!!!" << endl;
 			}
-
 		}
 
-		// End of the simulation
 
+		// End of the simulation
 
 		//// Computing output ////
 		// Probability distribution
@@ -240,12 +243,11 @@ int main() {
 		}
 		plain = 1.0 / (L); // Plain probability distribution
 
-
-		//// Displaying the output ////
-		/*cout << "\nNumber of times each cell was visited during the simulation: \n";
-		for (n = 0; n < L; n++) {
-			cout << Counter[n] << "  ";
-		}*/
+						   //// Displaying the output ////
+						   /*cout << "\nNumber of times each cell was visited during the simulation: \n";
+						   for (n = 0; n < L; n++) {
+						   cout << Counter[n] << "  ";
+						   }*/
 		if (L < 51) {
 			cout << "\n\nProbability distribution to find atom in each cell: \n";
 			for (n = 0; n < L; n++) {
@@ -274,18 +276,18 @@ int main() {
 			}
 		}
 		cout << "\nCompare with the flat distribution 1/L: " << plain << endl << endl;
-		cout << "\nAverage displacement: " << xsum/nwalks << endl;
-		cout << endl << "\nMean squared displacement: " << xsqsum/nwalks << endl;
+		cout << "\nAverage displacement: " << xsum / nwalks << endl;
+		cout << endl << "\nMean squared displacement: " << xsqsum / nwalks << endl;
 		cout << "\nCompare with the number of timesteps: " << dt << endl;
 
 		//// Exporting the output to the text file ////
 		// Header
 		out_stream << "This is a document that stores the output from Random Walk program. Here in particular we work with 1d lattice gas.\n\nThe simulation input parameters:\n";
 		// Simulation parameters
-		out_stream << "Lattice size: " << L << " cells"<<"\nNumber of atoms: " << N << "\nProbability to go left: " << p << "\nBoundary conditions (0 stands for periodic, and 1 for reflecting b.c.): " << bc << "\nNumber of walks: " << nwalks << "\nNumber of steps in each walk: " << dt <<"\nMean displacement: "<<xsum/nwalks<<"\nMean square displacement"<<xsqsum/nwalks << ".\n\n Cell number | Probability to find an atom\n";
+		out_stream << "Lattice size: " << L << " cells" << "\nNumber of atoms: " << N << "\nProbability to go left: " << p << "\nBoundary conditions (0 stands for periodic, and 1 for reflecting b.c.): " << bc << "\nNumber of walks: " << nwalks << "\nNumber of steps in each walk: " << dt << "\nMean displacement: " << xsum / nwalks << "\nMean square displacement" << xsqsum / nwalks << ".\n\n Cell number | Probability to find an atom\n";
 		// Output
 		for (n = 0; n < L; n++) {
-			out_stream << Prob[n] << "		"<< XMEAN[n] << endl;
+			out_stream << Prob[n] << "		" << n - L / 2 << endl;
 		}
 		//cout << "Doing random walk to " << N << " steps" << " and " << nwalks << " times, we have" << endl;
 		//cout << "The average displacement " << xsum / nwalks << "\nThe mean squared displacement " << xsqsum / nwalks << endl;
@@ -300,7 +302,7 @@ int main() {
 void shiftleft(int myarray[], int myarray2[], int element, int size, int boundary) // Shifts atom to the left
 {
 	// For periodic boundary conditions
-	if (boundary == 0) { 
+	if (boundary == 0) {
 		if (element != 0) { // If atom is NOT in the first cell
 			if (myarray[element - 1] != 1) { // If left neighbor cell is not occupied
 				myarray[element - 1] = 1;
@@ -325,7 +327,7 @@ void shiftleft(int myarray[], int myarray2[], int element, int size, int boundar
 	}
 
 	// For reflecting boundary conditions
-	if (boundary == 1) { 
+	if (boundary == 1) {
 		if (element != 0) { // If atom is NOT in the first cell
 			if (myarray[element - 1] != 1) { // If left neighbor cell is empty
 				myarray[element - 1] = 1;
@@ -345,10 +347,10 @@ void shiftleft(int myarray[], int myarray2[], int element, int size, int boundar
 	// For non exclusive system with reflecting bc
 	if (boundary == 2) {
 		if (element != 0) { // If atom is NOT in the first cell
-				myarray[element - 1] = myarray[element - 1]+ myarray[element];
-				myarray2[element - 1] = myarray2[element - 1] + myarray[element];
-				myarray[element] = 0;
-			
+			myarray[element - 1] = myarray[element - 1] + myarray[element];
+			myarray2[element - 1] = myarray2[element - 1] + myarray[element];
+			myarray[element] = 0;
+
 		}
 		else { // Reflecting back to the right
 			myarray[element + 1] = myarray[element + 1] + myarray[element];
@@ -356,7 +358,7 @@ void shiftleft(int myarray[], int myarray2[], int element, int size, int boundar
 			myarray[element] = 0;
 		}
 	}
-	
+
 }
 
 
@@ -407,7 +409,7 @@ void shiftright(int myarray[], int myarray2[], int element, int size, int bounda
 
 	// For non exclusive system with reflecting bc
 	if (boundary == 2) {
-		if (element != size-1) { // If atom is NOT in the last cell
+		if (element != size - 1) { // If atom is NOT in the last cell
 			myarray[element + 1] = myarray[element + 1] + myarray[element];
 			myarray2[element + 1] = myarray2[element + 1] + myarray[element];
 			myarray[element] = 0;
