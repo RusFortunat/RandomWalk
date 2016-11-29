@@ -83,7 +83,9 @@ int main() {
 			// Filling the lattice with particles in random fashion
 			// First particle will be placed at the center of the array to compute the probability distribution vs displacement
 			Lattice[L / 2] = 1;
-			Counter[L / 2] = 1;
+			if (N > 1) { // Only for multiparticle system
+				Counter[L / 2] = 1;
+			}
 			for (n = 1; n < N; n++) {
 				//c = rand() % L; // Chooses a random cell in our 1d array.
 				a = Latt(RNG);
@@ -150,16 +152,23 @@ int main() {
 							}
 						}
 					}
+					else {
+						if (N == 1)
+						{
+							iter--;
+						}
+					}
+
 				}
 				// End of the step cycle
-
 				
 				// Computing in-between occupation probability for correlation function
-				if (istep % m == 0&&istep!=0) {
-					Corr[istep / m] += ((Counter[L / 2] -d)*1.0)/ m;
-					d = Counter[L / 2];
+				if (N > 1) { // Correlation function computed only for system with more than one particle !!!
+					if (istep % m == 0 && istep != 0) {
+						Corr[istep / m] += ((Counter[L / 2] - d)*1.0) / m;
+						d = Counter[L / 2];
+					}
 				}
-
 				// Displaying change of the positions
 				for (n = 0; n < L; n++) {
 					cout << Lattice[n];
@@ -169,18 +178,20 @@ int main() {
 
 			//Computing output parameters
 			// Probability distribution
-			for (n = 0; n < L; n++) {
-				Prob[n] += Counter[n];
-			}
-			// Displacement -- !!! Works only for a single particle in a whole lattice!!! N must equal to 1
-			for (n = 0; n < L; n++) {
-				if (Lattice[n] != 0) {
-					x = n - L / 2;
-					xsum += x; // Accumulates all final displacements to compute <x>
-					xsqsum += x*x; // Accumulates squared displacement to compute MSD
+			if (N == 1) { // !!! For now works only for a single particle in a whole lattice!!! N must be equal to 1
+				for (n = 0; n < L; n++) {
+					Prob[n] += Counter[n];
+				}
+
+				// Displacement -- 
+				for (n = 0; n < L; n++) {
+					if (Lattice[n] != 0) {
+						x = n - L / 2;
+						xsum += x; // Accumulates all final displacements to compute <x>
+						xsqsum += x*x; // Accumulates squared displacement to compute MSD
+					}
 				}
 			}
-
 			// Check if we lost/acquire particle(s) during the run
 			Rest = 0;
 			for (n = 0; n < L; n++) {
@@ -195,47 +206,51 @@ int main() {
 
 		//// Computing general output ////
 		// Probability distribution
-		for (n = 0; n < L; n++) {
-			Prob[n] = Prob[n] / (nwalks*dt*N);
+		if (N == 1) {
+			for (n = 0; n < L; n++) {
+				Prob[n] = Prob[n] / (nwalks*dt*N);
+			}
 		}
 		plain = 1.0 / (L); // Plain probability distribution
 		// Time correlation function
-
-		for (n = 1; n < L / m; n++) {
-			Corr[n] = rho*Corr[n]/nwalks-rho*rho;
+		if (N > 1) { // For more than one particle
+			for (n = 1; n < L / m; n++) {
+				Corr[n] = rho*Corr[n] / nwalks - rho*rho;
+			}
 		}
-		if (L < 51) {
+		if (L < 51&&N==1) {
 			cout << "\n\nProbability distribution to find atom in each cell: \n";
 			for (n = 0; n < L; n++) {
 				cout << Prob[n] << scientific << endl;
 			}
 		}
-		if (51 < L&&L < 501) {
+		if (51 < L&&L < 501&&N==1) {
 			cout << "\n\nProbability distribution to find atom in each cell: \n";
 			for (n = 0; n < L; n++) {
 				cout << Prob[n] << scientific << endl;
 				n += 5;
 			}
 		}
-		if (501 < L&&L < 5001) {
+		if (501 < L&&L < 5001&&N==1) {
 			cout << "\n\nProbability distribution to find atom in each cell: \n";
 			for (n = 0; n < L; n++) {
 				cout << Prob[n] << scientific << endl;
 				n += 50;
 			}
 		}
-		if (5001 < L&&L < 50000) {
+		if (5001 < L&&L < 50000&&N==1) {
 			cout << "\n\nProbability distribution to find atom in each cell: \n";
 			for (n = 0; n < L; n++) {
 				cout << Prob[n] << scientific << endl;
 				n += 500;
 			}
 		}
-		cout << "\nCompare with the flat distribution 1/L: " << plain << endl << endl;
-		cout << "\nAverage displacement: " << xsum / nwalks << endl;
-		cout << endl << "\nMean squared displacement: " << xsqsum / nwalks << endl;
-		cout << "\nCompare with the number of timesteps: " << dt << endl;
-
+		if (N == 1) {
+			cout << "\nCompare with the flat distribution 1/L: " << plain << endl << endl;
+			cout << "\nAverage displacement: " << xsum / nwalks << endl;
+			cout << endl << "\nMean squared displacement: " << xsqsum / nwalks << endl;
+			cout << "\nCompare with the number of timesteps: " << dt << endl;
+		}
 		//// Exporting the output to the text file ////
 		// Header
 		out_stream << "This is a document that stores the output from Random Walk program. Here in particular we work with 1d lattice gas.\n\nThe simulation input parameters:\n";
