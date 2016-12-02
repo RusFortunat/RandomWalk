@@ -9,7 +9,6 @@ using namespace std;
 
 void shiftright(int myarray[], int myarray2[], int element, int size);
 void shiftleft(int myarray[], int myarray2[], int element, int size);
-void PressKeyToContinue();
 
 // The whole purpose of the program is to reproduce the central limit theorem and plot the gaussian
 int main() {
@@ -41,7 +40,7 @@ int main() {
 		cin >> dt;
 		if (dt > L / 2) {
 			cout << "Error! The number of time steps cannot be greater that the half of the lattice!!!";
-			PressKeyToContinue();
+			system("PAUSE");
 			return 1;
 		}
 		cout << "\nHow many times you want to simulate the walk: ";
@@ -125,7 +124,7 @@ int main() {
 			cout << "\nTotal particles number: before " << N << ",  after  " << Rest << endl;
 			if (N != Rest) {
 				cout << "Partice lost/acquired during the run!!!" << endl;
-				PressKeyToContinue();
+				system("PAUSE");
 				return 1;
 			}
 		}
@@ -168,7 +167,7 @@ int main() {
 		// Header
 		out_stream << "This is a document that stores the output from Random Walk program. The purpose of this program is to reproduce the central limit theorem.\n\nThe simulation input parameters:\n";
 		// Simulation parameters
-		out_stream << "Lattice size: " << L << " cells" << "\nNumber of atoms: " << N << "\nProbability to go left: " << p << "\nNumber of walks: " << nwalks << "\nNumber of steps in each walk: " << dt << "\nMean displacement: " << xsum / nwalks << "\nMean square displacement" << xsqsum / nwalks << ".\n\n Cell number | Probability to find an atom\n";
+		out_stream << "Lattice size: " << L << " cells" << "\nNumber of atoms: " << N << "\nProbability to go the right: " << p << "\nNumber of walks: " << nwalks << "\nNumber of steps in each walk: " << dt << "\nMean displacement: " << xsum / nwalks << "\nMean square displacement: " << xsqsum / nwalks << ".\n\n Cell number | Probability to find an atom\n";
 		// Output
 		for (n = 0; n < L; n++) {
 			out_stream << n - L / 2 << "		" << Prob[n] << endl;
@@ -176,7 +175,7 @@ int main() {
 		out_stream.close();
 	}
 
-	PressKeyToContinue();
+	system("PAUSE");
 	return 0;
 }
 
@@ -194,12 +193,4 @@ void shiftright(int myarray[], int myarray2[], int element, int size) // Shifts 
 		myarray[element + 1] = 1;
 		myarray2[element + 1]++;
 		myarray[element] = 0;
-}
-
-void PressKeyToContinue()
-{
-	int c;
-	printf("Press any key to continue... ");
-	fflush(stdout);
-	do c = getchar(); while ((c != '\n') && (c != EOF));
 }
