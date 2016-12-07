@@ -1,196 +1,157 @@
 #include <iostream>
-#include <fstream>
-#include <stdio.h>
-#include <time.h>
+#include <iomanip>
 #include <random>
-#include <limits>
 
-using namespace std;
-
-void shiftright(int myarray[], int myarray2[], int element, int size);
-void shiftleft(int myarray[], int myarray2[], int element, int size);
-
-// The whole purpose of the program is to reproduce the central limit theorem and plot the gaussian
-int main() {
-	string outFile("D:\\Science\\Research\\Random_Walk\\RandWalk_1d.txt"); // File for storing the output.
-	ofstream out_stream;
-	out_stream.open(outFile.c_str());
-
-	if (out_stream.fail()) // Just in case
-	{
-		cout << "Error occurred during opening file!" << endl;
-		return 1;
-	}
-
-	if (out_stream)
-	{
-		//// Greeting ////
-		cout << "Hi there!\nLets simulate random walk in 1d lattice!" << endl << endl;
-		//// Declaration of the variables ////
-		int L, Lat, R, dt, N, nwalks, iwalk, istep, iter, bc;
-		int a, b, c, d, e, n, m, Rest;
-		double p, plain, x, xsum, xsqsum, r, rho;
-		//// Specifying the parameters of the simulation ////
-		cout << "First, enter parameters for your 1d lattice:" << endl;
-		cout << "Size of the lattice: "; // The size of one dimensional array
-		cin >> L;
-		cout << "\nSet the probability for atom to go the right: ";
-		cin >> p; // Sets the probability to go to the left (and to the rigth: 1 - p )
-		cout << "\nHow many steps for each walk: ";
-		cin >> dt;
-		if (dt > L / 2) {
-			cout << "Error! The number of time steps cannot be greater that the half of the lattice!!!";
-			system("PAUSE");
-			return 1;
-		}
-		cout << "\nHow many times you want to simulate the walk: ";
-		cin >> nwalks;
-
-		//// Random walk algorithm ////
-		// Mersenne Twister RNG //
-		random_device rd{};
-		mt19937 RNG{ rd() };
-		uniform_int_distribution<int> Latt(0, L - 1);
-		uniform_real_distribution<double> Rand{ 0.0, 1.0 };
-		xsum = 0; xsqsum = 0; N = 1;
-		int* Lattice = new int[L]; // Our one dimensional lattice
-		int* Counter = new int[L]; // Here we will store info how many times each cell were occupied during the single run
-		double* Prob = new double[L]; // Array with probabilities
-		for (n = 0; n < L; n++) // Setting counter to zero
-		{
-			Prob[n] = 0; // 
-		}
-
-		//// Beginning of the simulation ////
-		for (iwalk = 0; iwalk < nwalks; iwalk++) { // Number of runs
-			for (n = 0; n < L; n++)// Setting all lattice cells to be empty first
-			{
-				Lattice[n] = 0;
-			}
-			for (n = 0; n < L; n++) // Setting counter to zero
-			{
-				Counter[n] = 0; // 
-			}
-			Lattice[L / 2] = 1;
-			Counter[L / 2] = 1;
-			cout << "\nInitial positions of the attoms in the lattice:\n";
-			for (n = 0; n < L; n++) {
-				cout << Lattice[n];
-			}cout << endl;
-
-			// Beginning of the single run
-			for (istep = 0; istep < dt; istep++) { // Number of steps for each run
-					// Picking the random particle in the array
-				for (n = 0; n < L; n++) {
-					if (Lattice[n] != 0) { // Working only with non-empty cells
-					// Throwing the due. Generates a random number between 0 and 1. If number is less than probability p, go to the right, otherwise go to the left
-						r = Rand(RNG);
-						if (r > p) {
-							shiftleft(Lattice, Counter, n, L);
-						}
-						else {
-							shiftright(Lattice, Counter, n, L);
-						}
-						n += L;
-					}
-				}
-				// Displaying change of the positions
-				for (n = 0; n < L; n++) {
-					cout << Lattice[n];
-				}cout << endl;
-			}
-			// End of the run
-
-			//Computing output parameters
-			// Probability distribution
-			for (n = 0; n < L; n++) {
-				Prob[n] += Counter[n];
-			}
-
-			// Displacement
-			for (n = 0; n < L; n++) {
-				if (Lattice[n] != 0) {
-					x = n - L / 2;
-					xsum += x; // Accumulates all final displacements to compute <x>
-					xsqsum += x*x; // Accumulates squared displacement to compute MSD
-				}
-			}
-
-			// Check if we lost/acquire particle(s) during the run
-			Rest = 0;
-			for (n = 0; n < L; n++) {
-				Rest += Lattice[n];
-			}
-			cout << "\nTotal particles number: before " << N << ",  after  " << Rest << endl;
-			if (N != Rest) {
-				cout << "Partice lost/acquired during the run!!!" << endl;
-				system("PAUSE");
-				return 1;
-			}
-		}
-		// End of the simulation
-
-		//// Computing general output ////
-		// Probability distribution
-		for (n = 0; n < L; n++) {
-			Prob[n] = Prob[n] / (nwalks*dt*N);
-		}
-
-		plain = 1.0 / (L); // Plain probability distribution
-		if (51 < L&&L < 501) {
-			cout << "\n\nProbability distribution to find atom in each cell: \n";
-			for (n = 0; n < L; n++) {
-				cout << Prob[n] << scientific << endl;
-				n += 5;
-			}
-		}
-		if (501 < L&&L < 5001) {
-			cout << "\n\nProbability distribution to find atom in each cell: \n";
-			for (n = 0; n < L; n++) {
-				cout << Prob[n] << scientific << endl;
-				n += 50;
-			}
-		}
-		if (5001 < L&&L < 50000) {
-			cout << "\n\nProbability distribution to find atom in each cell: \n";
-			for (n = 0; n < L; n++) {
-				cout << Prob[n] << scientific << endl;
-				n += 500;
-			}
-		}
-		cout << "\nCompare with the flat distribution 1/L: " << plain << endl << endl;
-		cout << "\nAverage displacement: " << xsum / nwalks << endl;
-		cout << endl << "\nMean squared displacement: " << xsqsum / nwalks << endl;
-		cout << "\nCompare with the number of timesteps: " << dt << endl;
-
-		//// Exporting the output to the text file ////
-		// Header
-		out_stream << "This is a document that stores the output from Random Walk program. The purpose of this program is to reproduce the central limit theorem.\n\nThe simulation input parameters:\n";
-		// Simulation parameters
-		out_stream << "Lattice size: " << L << " cells" << "\nNumber of atoms: " << N << "\nProbability to go the right: " << p << "\nNumber of walks: " << nwalks << "\nNumber of steps in each walk: " << dt << "\nMean displacement: " << xsum / nwalks << "\nMean square displacement: " << xsqsum / nwalks << ".\n\n Cell number | Probability to find an atom\n";
-		// Output
-		for (n = 0; n < L; n++) {
-			out_stream << n - L / 2 << "		" << Prob[n] << endl;
-		}
-		out_stream.close();
-	}
-
-	system("PAUSE");
-	return 0;
-}
-
-
-void shiftleft(int myarray[], int myarray2[], int element, int size) // Shifts atom to the left
+int main()
 {
-		myarray[element - 1] = 1;
-		myarray2[element - 1]++;
-		myarray[element] = 0;
-}
+    std::cout << "Welcome to random walk simulation program" << std::endl << std::endl;
 
+    // ==================================================
+    // Simulation parameters input
+    // ==================================================
 
-void shiftright(int myarray[], int myarray2[], int element, int size) // Shifts atom to the right
-{
-		myarray[element + 1] = 1;
-		myarray2[element + 1]++;
-		myarray[element] = 0;
+    int latticeSize, stepsQuantity, repeatsQuantity;
+    double rightProbability;
+
+    std::cout << "Please, enter simulation parameters" << std::endl;
+
+    std::cout << "Size of lattice: "; std::cin >> latticeSize;
+    std::cout << "Probability for particle to go right: "; std::cin >> rightProbability;
+    std::cout << "Simulation steps quantity: "; std::cin >> stepsQuantity;
+    std::cout << "Simulation repeats quantity: "; std::cin >> repeatsQuantity;
+
+    std::cout << std::endl;
+
+    // ==================================================
+    // Simulation parameters check
+    // ==================================================
+
+    auto errorInParameters = false;
+
+    if (latticeSize < 1)
+    {
+        std::cout << "Error in simulation parameters: size of lattice must be greather or equal than 1" << std::endl;
+        errorInParameters = true;
+    }
+    if (rightProbability <= 0 || rightProbability >= 1.0)
+    {
+        std::cout << "Error in simulation parameters: probability for particle to go right must be between 0 (excluding) and 1 (excluding)" << std::endl;
+        errorInParameters = true;
+    }
+    if (stepsQuantity < 1 || stepsQuantity >= latticeSize / 2)
+    {
+        std::cout << "Error in simulation parameters: simulation steps quantity must be between 1 (including) and half of lattice size (excluding)" << std::endl;
+        errorInParameters = true;
+    }
+    if (repeatsQuantity < 1)
+    {
+        std::cout << "Error in simulation parameters: simulation repeats quantity must be greather or equal than 1" << std::endl;
+        errorInParameters = true;
+    }
+
+    if (errorInParameters)
+    {
+        system("PAUSE");
+        return 0;
+    }
+
+    // ==================================================
+    // Random numbers generator creating
+    // ==================================================
+
+    std::random_device randomDevice {};
+    std::mt19937 randomGenerator { randomDevice() };
+
+    std::uniform_real_distribution<double> numbersDistribution { 0.0, 1.0 };
+
+    // ==================================================
+    // Memory allocation
+    // ==================================================
+
+    auto probability = new double[latticeSize];
+    for (auto i = 0; i < latticeSize; i++)
+    {
+        probability[i] = 0.0;
+    }
+
+    // ==================================================
+    // Simulation
+    // ==================================================
+
+    std::cout << "Simulation started..." << std::endl;
+
+    for (auto repeatNumber = 0; repeatNumber < repeatsQuantity; repeatNumber++)
+    {
+        auto particlePosition = latticeSize / 2;
+        probability[latticeSize / 2]++;
+
+        for (auto stepNumber = 0; stepNumber < stepsQuantity; stepNumber++)
+        {
+            auto randomNumber = numbersDistribution(randomGenerator);
+            if (randomNumber <= rightProbability)
+            {
+                particlePosition++;
+            }
+            else
+            {
+                particlePosition--;
+            }
+
+            probability[particlePosition]++;
+        }
+
+        std::cout << std::fixed << std::setprecision(2) << std::setw(7) << static_cast<double>(repeatNumber + 1) / repeatsQuantity * 100 << "% competed" << std::endl;
+    }
+
+    std::cout << "Simulation finished" << std::endl << std::endl;
+
+    // ==================================================
+    // Simulation results calculating
+    // ==================================================
+
+    for (auto i = 0; i < latticeSize; i++)
+    {
+        probability[i] = probability[i] / stepsQuantity / repeatsQuantity;
+    }
+
+    // ==================================================
+    // Results parameters input
+    // ==================================================
+
+    int resultsStep;
+
+    std::cout << "Please, enter results parameters" << std::endl;
+    std::cout << "Step in lattice to output results: "; std::cin >> resultsStep;
+    std::cout << std::endl;
+
+    // ==================================================
+    // Results parameters check
+    // ==================================================
+
+    if (resultsStep < 1 || resultsStep >= latticeSize / 2)
+    {
+        std::cout << "Error in results parameters: step in lattice to output results must be between 1 (including) and half of lattice size (excluding)" << std::endl;
+        system("PAUSE");
+        return 0;
+    }
+
+    // ==================================================
+    // Simulation results output
+    // ==================================================
+
+    std::cout << "Propability of finding a particle in a cells of lattice" << std::endl;
+    for (auto i = 0; i < latticeSize; i += resultsStep)
+    {
+        std::cout << std::fixed << std::setprecision(2) << std::setw(7) << probability[i] * 100 << "%" << std::endl;
+    }
+    std::cout << std::endl;
+
+    // ==================================================
+    // Memory deallocation
+    // ==================================================
+
+    delete[] probability;
+    
+    system("PAUSE");
+    return 0;
 }
